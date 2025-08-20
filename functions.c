@@ -1,99 +1,171 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "functions.h"
 
-void insert(int arr[], int *size, int element, int pos, int capacity) {
-    if (*size >= capacity) {
-        printf("Array is full, cannot insert.\n");
+
+Node* createNode(int data) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->data = data;
+    newNode->prev = newNode->next = NULL;
+    return newNode;
+}
+
+
+void insertAtBeginning(Node** head, int data) {
+    Node* newNode = createNode(data);
+    if (*head != NULL) {
+        newNode->next = *head;
+        (*head)->prev = newNode;
+    }
+    *head = newNode;
+}
+
+
+void insertAtEnd(Node** head, int data) {
+    Node* newNode = createNode(data);
+    if (*head == NULL) {
+        *head = newNode;
         return;
     }
-    if (pos < 1 || pos > *size + 1) {
-        printf("Invalid position.\n");
+    Node* temp = *head;
+    while (temp->next != NULL)
+        temp = temp->next;
+    temp->next = newNode;
+    newNode->prev = temp;
+}
+
+
+void insertAtPosition(Node** head, int data, int pos) {
+    if (pos <= 1) {
+        insertAtBeginning(head, data);
         return;
     }
-    for (int i = *size; i >= pos; i--) {
-        arr[i] = arr[i - 1];
+    Node* newNode = createNode(data);
+    Node* temp = *head;
+    for (int i = 1; temp != NULL && i < pos - 1; i++) {
+        temp = temp->next;
     }
-    arr[pos - 1] = element;
-    (*size)++;
-}
-
-void update(int arr[], int size, int pos, int newValue) {
-    if (pos < 1 || pos > size) {
-        printf("Invalid position.\n");
+    if (temp == NULL) {
+        insertAtEnd(head, data);
         return;
     }
-    arr[pos - 1] = newValue;
+    newNode->next = temp->next;
+    if (temp->next != NULL)
+        temp->next->prev = newNode;
+    temp->next = newNode;
+    newNode->prev = temp;
 }
 
-void delete(int arr[], int *size, int pos) {
-    if (pos < 1 || pos > *size) {
-        printf("Invalid position.\n");
+
+void deleteAtBeginning(Node** head) {
+    if (*head == NULL) {
+        printf("List is empty!\n");
         return;
     }
-    for (int i = pos - 1; i < *size - 1; i++) {
-        arr[i] = arr[i + 1];
-    }
-    (*size)--;
+    Node* temp = *head;
+    *head = (*head)->next;
+    if (*head != NULL)
+        (*head)->prev = NULL;
+    free(temp);
 }
 
-int search(int arr[], int size, int element) {
-    for (int i = 0; i < size; i++) {
-        if (arr[i] == element)
-            return i;
+
+void deleteAtEnd(Node** head) {
+    if (*head == NULL) {
+        printf("List is empty!\n");
+        return;
     }
-    return -1;
+    Node* temp = *head;
+    while (temp->next != NULL)
+        temp = temp->next;
+    if (temp->prev != NULL)
+        temp->prev->next = NULL;
+    else
+        *head = NULL;
+    free(temp);
 }
 
-void sortArray(int arr[], int size) {
-    int temp;
-    for (int i = 0; i < size - 1; i++) {
-        for (int j = 0; j < size - i - 1; j++) {
-            if (arr[j] > arr[j + 1]) {
-                temp = arr[j];
-                arr[j] = arr[j + 1];
-                arr[j + 1] = temp;
-            }
-        }
+
+void deleteAtPosition(Node** head, int pos) {
+    if (*head == NULL) {
+        printf("List is empty!\n");
+        return;
     }
+    Node* temp = *head;
+    if (pos == 1) {
+        deleteAtBeginning(head);
+        return;
+    }
+    for (int i = 1; temp != NULL && i < pos; i++)
+        temp = temp->next;
+    if (temp == NULL) {
+        printf("Position out of range!\n");
+        return;
+    }
+    if (temp->prev != NULL)
+        temp->prev->next = temp->next;
+    if (temp->next != NULL)
+        temp->next->prev = temp->prev;
+    free(temp);
 }
 
-void splitArray(int arr[], int size, int arr1[], int *size1, int arr2[], int *size2) {
-    *size1 = size / 2;
-    *size2 = size - *size1;
-    for (int i = 0; i < *size1; i++) {
-        arr1[i] = arr[i];
-    }
-    for (int i = 0; i < *size2; i++) {
-        arr2[i] = arr[i + *size1];
-    }
-}
 
-void mergeArrays(int arr1[], int size1, int arr2[], int size2, int merged[]) {
-    int i = 0, j = 0, k = 0;
-    while (i < size1 && j < size2) {
-        if (arr1[i] < arr2[j]) {
-            merged[k++] = arr1[i++];
-        } else {
-            merged[k++] = arr2[j++];
-        }
+void displayList(Node* head) {
+    if (head == NULL) {
+        printf("List is empty!\n");
+        return;
     }
-    while (i < size1) merged[k++] = arr1[i++];
-    while (j < size2) merged[k++] = arr2[j++];
-}
-
-void reverseArray(int arr[], int size) {
-    int temp;
-    for (int i = 0; i < size / 2; i++) {
-        temp = arr[i];
-        arr[i] = arr[size - i - 1];
-        arr[size - i - 1] = temp;
-    }
-}
-
-void printArray(int arr[], int size) {
-    for (int i=0; i<size; i++) {
-        printf("%d ", arr[i]);
+    printf("List: ");
+    while (head != NULL) {
+        printf("%d ", head->data);
+        head = head->next;
     }
     printf("\n");
+}
+
+
+void reverseList(Node** head) {
+    Node* temp = NULL;
+    Node* current = *head;
+    while (current != NULL) {
+        temp = current->prev;
+        current->prev = current->next;
+        current->next = temp;
+        current = current->prev;
+    }
+    if (temp != NULL)
+        *head = temp->prev;
+}
+
+
+void sortList(Node** head) {
+    if (*head == NULL) return;
+    int swapped;
+    Node* ptr1;
+    Node* lptr = NULL;
+    do {
+        swapped = 0;
+        ptr1 = *head;
+        while (ptr1->next != lptr) {
+            if (ptr1->data > ptr1->next->data) {
+                int temp = ptr1->data;
+                ptr1->data = ptr1->next->data;
+                ptr1->next->data = temp;
+                swapped = 1;
+            }
+            ptr1 = ptr1->next;
+        }
+        lptr = ptr1;
+    } while (swapped);
+}
+
+
+Node* search(Node* head, int key) {
+    while (head != NULL) {
+        if (head->data == key)
+            return head;
+        head = head->next;
+    }
+    return NULL;
 }
 
